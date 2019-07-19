@@ -1,30 +1,12 @@
-
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Table {
-    /**
-     *
-     */
-    /**
-     * kod kreiranja kao parametar morate proslediti String[] koji predstavlja zaglavnja tabele
-     * i onda metodom addRow dodavati svaki red takodje kao String[]
-     *
-     * parametar sirina predstavlja koliko ce biti mesta izmedju kraja reci i kraja polja gde se rec nalazi,
-     * gde je sirina neparan broj (najbolje je da je bar veci od 2) - default vrednost je 9
-     *
-     * - moze se setovati metodom setSirina ciji je jedini parametar int veci od 2
-     * - ona se mora promeniti pre dodavanja redova inace nece nista promeniti u prikazu tabele
-     *
-     *
-     * default velicina liste sa podacima je 50,ali se ona duplira svaki put kada se do limita stigne
-     */
 
     private String[] headers;       // headers of the table
     private int colNum, rowNum;     // number of rows and columns in the table (number of columns can't be changed!)
     private int[] maxDataLength;    // maximum lengths for a cell in a each row of the table (determines widths for all cells in that row)
     private String[][] data;        // matrix containing all data (excluding headers)
-    private int spacing = 11;       // spacing between a cell value and the beginning and the end of that cell
+    public int spacing = 11;       // spacing between a cell value and the beginning and the end of that cell
     private boolean isHeaders;      // does the table have headers or not
 
 
@@ -66,15 +48,14 @@ public class Table {
      */
     public void addRow(String[] row){
 
+        //incorrect number of items to be inserted
+        if (row.length != this.colNum) {
+            throw new IllegalArgumentException("The table has " + colNum +" columns, and you are trying to insert row with " + row.length+" elements");
+        }
+
         // if array is full we will double its size and then insert a row
         if(data[data.length - 1] != null) {
             resize();
-        }
-
-        //incorrect number of items to be inserted
-        if (row.length != this.colNum) {
-            System.out.println("Nemoguce je dodati podatke u red jer broj podataka nije isti sa brojem kolona!");
-            return;
         }
 
         //update max column values
@@ -101,23 +82,27 @@ public class Table {
      */
     public void deleteRow(int rowID){
 
-        if( rowID > rowNum + 1 ){
-            //err
-            return;
+        //if the table does not have inserted row at given index
+        if( rowID > rowNum - 1 ){
+            throw new ArrayIndexOutOfBoundsException("Table does not have a row at index: " + rowID);
         }
 
         String[][] newData = new String[data.length][data[0].length];
         Arrays.fill(newData, null);
-        int[] newLength = new int[maxDataLength.length*2];
+        int[] newLength = new int[maxDataLength.length];
         Arrays.fill(newLength, 0);
 
         for(int i = 0; i < data.length; i++ ){
+
+            if(data[i] == null)
+                break;
+
             if(i != rowID && data[i] != null){
                 newData[i] = data[i];
                 // reseting the max column values
                 for( int j = 0; j < data[i].length; j++){
-                    if( data[i][j].length() > newLength[j]){
-                        changeMaxLength(newLength, j, newLength[j]);
+                    if( newData[i][j].length() > newLength[j]){
+                        changeMaxLength(newLength, j, newData[i][j].length());
                     }
                 }
             }
@@ -237,40 +222,34 @@ public class Table {
         String[][] newData = new String[data.length*2][colNum];
         Arrays.fill(newData, null);
 
-        System.arraycopy(newData,0,data,0, data.length);
+        System.arraycopy(data,0,newData,0, data.length);
         this.data = newData;
-        /**
-         for (int i = 0; i < data.length; i++) {
-         newData[i] = data[i];
-         }
-        */
-
-
-        // vrv ne treba
-        //int[] newLength = new int[maxDataLength.length*2];
-        //Arrays.fill(newLength, 0);
-        //System.arraycopy(newLength,0,maxDataLength,0, maxDataLength.length);
-        //this.maxDataLength = newLength;
-        //for (int i = 0; i < this.maxDataLength.length; i++) {
-          //  newLength[i] = maxDataLength[i];
-        //}
     }
-
 
 
     /**
-     * Sets the spacing of the cell related to the item inside
-     * @param newWidth - number of characters
+     * Extracts data from exactly one row
+     * @param index - of a row to be extracted
+     * @return
      */
-    public void setWidth(int newWidth) {
-        if (spacing > 2 && (spacing % 2) == 1) {
-            this.spacing = newWidth;
-        }
-        else if(spacing > 2) {
-            this.spacing = newWidth+1;
-        }
+    public String[] getRow(int index){
+        return data[index];
     }
 
+
+    /**
+     * Extracts data from exactly one column
+     * @param index - of a column to be extracted
+     * @return
+     */
+    public String[] getColumn(int index){
+        String[] ret = new String[rowNum];
+
+        for(int i =0; i < rowNum; i++){
+            ret[i] = data[i][index];
+        }
+        return ret;
+    }
 
     @Override
     public String toString() {
