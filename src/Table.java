@@ -39,36 +39,37 @@ public class Table {
         this.colNum = headeri.length;
         this.rowNum = 0;
         this.data = new String[50][colNum];
-        this.maxDataLength = new int[50];
+        this.maxDataLength = new int[colNum]; //bilo 50
         Arrays.fill(maxDataLength, 0);
         Arrays.fill(data, null);
         fillHeaders();
     }
 
     public void addRow(String[] podatak){
-        if(data[data.length-1]!=null) {
+
+        if(data[data.length - 1] != null) {
             //ako se popunio niz sa podacima
-            duplirajVelicinu();
+            resize();
         }
-        if (podatak.length!=this.colNum) {
+        if (podatak.length != this.colNum) {
             System.out.println("Nemoguce je dodati podatke u red jer broj podataka nije isti sa brojem kolona!");
             return;
         }
 
         for (int i = 0; i < podatak.length; i++) {
 
-            if(podatak[i]!= null && podatak[i].length()>maxDataLength[i]) {
+            if(podatak[i] != null && podatak[i].length() > maxDataLength[i]) {
                 maxDataLength[i] = podatak[i].length();
-                if ((maxDataLength[i]%2)==1) {
-                    maxDataLength[i]+=width;
+                if ((maxDataLength[i] % 2) == 1) {
+                    maxDataLength[i] += width;
                 }else {
-                    maxDataLength[i]+=width+1;
+                    maxDataLength[i] += width+1;
                 }
             }
         }
 
         for (int i = 0; i < data.length; i++) {
-            if(data[i]==null) {
+            if(data[i] == null) {
                 data[i] = podatak;
                 rowNum++;
                 return;
@@ -79,77 +80,58 @@ public class Table {
 
     public void deleteRow(int rowID){
         //TODO
-        if( rowID > rowNum ){
-
+        if( rowID <= rowNum + 1 ){
+            //err
+            return;
         }
+
+        String[][] newData = new String[data.length][data[0].length];
     }
 
-    @Override
-    public String toString() {
-        String pov = printHeaders();
-        pov += printData();
-        pov += printLastRow();
-        return pov;
-    }
 
     private String printHeaders() {
-        int odnos = 0;
-        String prvi = "";
-        String drugi = "";
+        int ratio = 0;
+        String horizontal = "";
+        String vertical = "";
         for (int i = 0; i < headers.length; i++) {
-            if((headers[i].length()%2)==1) {
-                headers[i]+=" ";
+            if((headers[i].length() % 2) == 1) {
+                headers[i] += " ";
             }
-            odnos = maxDataLength[i] - headers[i].length();
-            prvi += "+"+repeatString("-", maxDataLength[i]);
-            drugi+="|"+repeatString(" ", odnos/2)+headers[i]+repeatString(" ", odnos/2);
+            ratio = maxDataLength[i] - headers[i].length();
+            horizontal += "+" + repeatString("-", maxDataLength[i]);
+            vertical += "|" + repeatString(" ", ratio / 2)+headers[i]+repeatString(" ", ratio / 2);
         }
-        return prvi+"+\n"+drugi+"|\n"+prvi+"+\n";
+        return horizontal + "+\n" + vertical + "|\n" + horizontal + "+\n";
     }
-
 
 
     private String printData() {
-        String prvi = "";
+        String ret = "";
         for (int i = 0; i < data.length; i++) {
-            if(data[i]!=null) {
+            if(data[i] != null) {
                 for (int j = 0; j < data[i].length; j++) {
-                    if(data[i][j]!=null) {
-                        if((data[i][j].length()%2)==1) {
-                            data[i][j]+=" ";
+                    if(data[i][j] != null) {
+                        if((data[i][j].length() % 2) == 1) {
+                            data[i][j] += " ";
                         }
-                        int odnos = maxDataLength[j] - data[i][j].length();
-                        prvi+="|"+repeatString(" ", odnos/2)+data[i][j]+repeatString(" ", odnos/2);
+                        int ratio = maxDataLength[j] - data[i][j].length();
+                        ret += "|" + repeatString(" ", ratio / 2) + data[i][j] + repeatString(" ", ratio / 2);
                     }
                 }
-                prvi+="|\n";
+                ret += "|\n";
             }
         }
-        return prvi;
+        return ret;
     }
 
     private String printLastRow() {
-        int odnos = 0;
-        String prvi = "";
+        int ratio = 0;
+        String ret = "";
         for (int i = 0; i < headers.length; i++) {
-            odnos = maxDataLength[i] - headers[i].length();
-            prvi += "+"+repeatString("-", maxDataLength[i]);
+            ratio = maxDataLength[i] - headers[i].length();
+            ret += "+" + repeatString("-", maxDataLength[i]);
         }
-        return prvi+"+\n";
-    }
-
-    public void showWithoutHeaders() {
-        String pov = printData();
-        pov+=printLastRow();
-        System.out.println(pov);
-    }
-
-
-    public void show() {
-        String pov = printHeaders();
-        pov += printData();
-        pov += printData();
-        System.out.println(pov);
+        return ret + "+\n";
     }
 
 
@@ -169,31 +151,25 @@ public class Table {
         return new String(new char[times]).replace("\0", string);
     }
 
-    private void duplirajVelicinu() {
+    private void resize() {
 
-        String newData[][] = new String[data.length*2][colNum];
-
-        for (int i = 0; i < data.length; i++) {
-            newData[i] = data[i];
-        }
+        String[][] newData = new String[data.length*2][colNum];
+        System.arraycopy(newData,0,data,0, data.length);
         this.data = newData;
+        /**
+         for (int i = 0; i < data.length; i++) {
+         newData[i] = data[i];
+         }
+        */
 
-        int newLength[] = new int[maxDataLength.length*2];
-        for (int i = 0; i < this.maxDataLength.length; i++) {
-            newLength[i] = maxDataLength[i];
-        }
+        int[] newLength = new int[maxDataLength.length*2];
+        System.arraycopy(newLength,0,maxDataLength,0, maxDataLength.length);
         this.maxDataLength = newLength;
+        //for (int i = 0; i < this.maxDataLength.length; i++) {
+          //  newLength[i] = maxDataLength[i];
+        //}
     }
 
-
-    public void setWidth(int newWidth) {
-        if (width > 2 && (width % 2) == 1) {
-            this.width = newWidth;
-        }
-        else if(width > 2) {
-            this.width = newWidth+1;
-        }
-    }
 
     private void fillHeaders() {
         for (int i = 0; i < headers.length; i++) {
@@ -209,5 +185,37 @@ public class Table {
     }
 
 
+    public void setWidth(int newWidth) {
+        if (width > 2 && (width % 2) == 1) {
+            this.width = newWidth;
+        }
+        else if(width > 2) {
+            this.width = newWidth+1;
+        }
+    }
+
+
+    @Override
+    public String toString() {
+        String pov = printHeaders();
+        pov += printData();
+        pov += printLastRow();
+        return pov;
+    }
+
+
+    public void showWithoutHeaders() {
+        String pov = printData();
+        pov+=printLastRow();
+        System.out.println(pov);
+    }
+
+
+    public void show() {
+        String pov = printHeaders();
+        pov += printData();
+        pov += printData();
+        System.out.println(pov);
+    }
 
 }
