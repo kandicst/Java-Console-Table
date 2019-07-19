@@ -1,4 +1,4 @@
-# Java Console Table - Simple and clean way to display data in a tabular form
+# Java Console Table - Simple and clean way to display data in tabular form
 
 [![license](https://img.shields.io/github/license/ssttefann/Java-Console-Table.svg)]()
 
