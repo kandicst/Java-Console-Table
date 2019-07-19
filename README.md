@@ -1,1 +1,1 @@
-# Java-Console-Table
+# Java Console Table
