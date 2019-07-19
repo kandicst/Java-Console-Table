@@ -27,12 +27,13 @@ public class Table {
         this.colNum = 0;
         this.rowNum = 0;
         this.data = new String[50][colNum];
-        this.maxDataLength = new int[50];
+        this.maxDataLength = new int[colNum]; //bilo 50
         Arrays.fill(maxDataLength, 0);
         Arrays.fill(data, null);
         Arrays.fill(headers, "");
         fillHeaders();
     }
+
 
     public Table(String [] headeri) {
         this.headers = headeri;
@@ -45,21 +46,26 @@ public class Table {
         fillHeaders();
     }
 
-    public void addRow(String[] podatak){
+
+    /**
+     * Adds a new row to the contents of the table
+     * @param row - row to be added
+     */
+    public void addRow(String[] row){
 
         if(data[data.length - 1] != null) {
             //ako se popunio niz sa podacima
             resize();
         }
-        if (podatak.length != this.colNum) {
+        if (row.length != this.colNum) {
             System.out.println("Nemoguce je dodati podatke u red jer broj podataka nije isti sa brojem kolona!");
             return;
         }
 
-        for (int i = 0; i < podatak.length; i++) {
+        for (int i = 0; i < row.length; i++) {
 
-            if(podatak[i] != null && podatak[i].length() > maxDataLength[i]) {
-                maxDataLength[i] = podatak[i].length();
+            if(row[i] != null && row[i].length() > maxDataLength[i]) {
+                maxDataLength[i] = row[i].length();
                 if ((maxDataLength[i] % 2) == 1) {
                     maxDataLength[i] += width;
                 }else {
@@ -70,7 +76,7 @@ public class Table {
 
         for (int i = 0; i < data.length; i++) {
             if(data[i] == null) {
-                data[i] = podatak;
+                data[i] = row;
                 rowNum++;
                 return;
             }
@@ -78,14 +84,42 @@ public class Table {
     }
 
 
+    /**
+     * Deletes a row in a contents of the table
+     * @param rowID - index of a row to be deleted (between 0 and rowNum - 1)
+     */
     public void deleteRow(int rowID){
-        //TODO
-        if( rowID <= rowNum + 1 ){
+
+        if( rowID > rowNum + 1 ){
             //err
             return;
         }
 
         String[][] newData = new String[data.length][data[0].length];
+        Arrays.fill(newData, null);
+        int[] newLength = new int[maxDataLength.length*2];
+        Arrays.fill(newLength, 0);
+
+        for(int i = 0; i < data.length; i++ ){
+
+            if(i != rowID && data[i] != null){
+                newData[i] = data[i];
+                for( int j = 0; j < data[i].length; j++){
+                    if( data[i][j].length() > newLength[j]){
+                        newLength[j] = data[i][j].length();
+                        if ((maxDataLength[i] % 2) == 1) {
+                            maxDataLength[i] += width;
+                        }else {
+                            maxDataLength[i] += width+1;
+                        }
+                    }
+                }
+            }
+        }
+
+        data = newData;
+        maxDataLength = newLength;
+        fillHeaders();
     }
 
 
@@ -124,6 +158,7 @@ public class Table {
         return ret;
     }
 
+
     private String printLastRow() {
         int ratio = 0;
         String ret = "";
@@ -147,13 +182,25 @@ public class Table {
     }
 
 
+    /**
+     * Adds a string to itself given number of times
+     * @param string - string itself
+     * @param times - number of times
+     * @return - new String
+     */
     private String repeatString(String string, int times) {
         return new String(new char[times]).replace("\0", string);
     }
 
+
+    /**
+     * Doubles the size of data array once it reaches its capacity
+     */
     private void resize() {
 
         String[][] newData = new String[data.length*2][colNum];
+        Arrays.fill(newData, null);
+
         System.arraycopy(newData,0,data,0, data.length);
         this.data = newData;
         /**
@@ -162,29 +209,37 @@ public class Table {
          }
         */
 
-        int[] newLength = new int[maxDataLength.length*2];
-        System.arraycopy(newLength,0,maxDataLength,0, maxDataLength.length);
-        this.maxDataLength = newLength;
+
+        // vrv ne treba
+        //int[] newLength = new int[maxDataLength.length*2];
+        //Arrays.fill(newLength, 0);
+        //System.arraycopy(newLength,0,maxDataLength,0, maxDataLength.length);
+        //this.maxDataLength = newLength;
         //for (int i = 0; i < this.maxDataLength.length; i++) {
           //  newLength[i] = maxDataLength[i];
         //}
     }
 
 
+    /** */
     private void fillHeaders() {
         for (int i = 0; i < headers.length; i++) {
-            if (headers[i].length()> maxDataLength[i]) {
+            if (headers[i].length() > maxDataLength[i]) {
                 maxDataLength[i] = headers[i].length();
-                if ((maxDataLength[i]%2)==1) {
-                    maxDataLength[i]+=width;
+                if ((maxDataLength[i] % 2) == 1) {
+                    maxDataLength[i] += width;
                 }else {
-                    maxDataLength[i]+=width+1;
+                    maxDataLength[i] += width+1;
                 }
             }
         }
     }
 
 
+    /**
+     * Sets the spacing of the cell related to the item inside
+     * @param newWidth - number of characters
+     */
     public void setWidth(int newWidth) {
         if (width > 2 && (width % 2) == 1) {
             this.width = newWidth;
@@ -205,8 +260,9 @@ public class Table {
 
 
     public void showWithoutHeaders() {
-        String pov = printData();
-        pov+=printLastRow();
+        String pov = printLastRow();
+        pov += printData();
+        pov +=printLastRow();
         System.out.println(pov);
     }
 
@@ -214,7 +270,7 @@ public class Table {
     public void show() {
         String pov = printHeaders();
         pov += printData();
-        pov += printData();
+        pov += printLastRow();
         System.out.println(pov);
     }
 
