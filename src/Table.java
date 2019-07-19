@@ -4,6 +4,9 @@ import java.util.Arrays;
 
 public class Table {
     /**
+     *
+     */
+    /**
      * kod kreiranja kao parametar morate proslediti String[] koji predstavlja zaglavnja tabele
      * i onda metodom addRow dodavati svaki red takodje kao String[]
      *
@@ -17,12 +20,17 @@ public class Table {
      * default velicina liste sa podacima je 50,ali se ona duplira svaki put kada se do limita stigne
      */
 
-    private String[] headers;
-    private int colNum, rowNum;
-    private int[] maxDataLength;
-    private String[][] data;
-    private int width = 11;
+    private String[] headers;       // headers of the table
+    private int colNum, rowNum;     // number of rows and columns in the table (number of columns can't be changed!)
+    private int[] maxDataLength;    // maximum lengths for a cell in a each row of the table (determines widths for all cells in that row)
+    private String[][] data;        // matrix containing all data (excluding headers)
+    private int spacing = 11;       // spacing between a cell value and the beginning and the end of that cell
+    private boolean isHeaders;      // does the table have headers or not
 
+
+    /**
+     * Constructor for header-less table
+     */
     public Table() {
         this.colNum = 0;
         this.rowNum = 0;
@@ -35,12 +43,17 @@ public class Table {
     }
 
 
-    public Table(String [] headeri) {
-        this.headers = headeri;
-        this.colNum = headeri.length;
+    /**
+     * Constructor for table with headers
+     * @param headers_ - arrays of Strings representing table headers
+     */
+    public Table(String [] headers_) {
+        this.headers = headers_;
+        this.colNum = headers_.length;
         this.rowNum = 0;
         this.data = new String[50][colNum];
         this.maxDataLength = new int[colNum]; //bilo 50
+        isHeaders = true;
         Arrays.fill(maxDataLength, 0);
         Arrays.fill(data, null);
         fillHeaders();
@@ -53,27 +66,25 @@ public class Table {
      */
     public void addRow(String[] row){
 
+        // if array is full we will double its size and then insert a row
         if(data[data.length - 1] != null) {
-            //ako se popunio niz sa podacima
             resize();
         }
+
+        //incorrect number of items to be inserted
         if (row.length != this.colNum) {
             System.out.println("Nemoguce je dodati podatke u red jer broj podataka nije isti sa brojem kolona!");
             return;
         }
 
+        //update max column values
         for (int i = 0; i < row.length; i++) {
-
             if(row[i] != null && row[i].length() > maxDataLength[i]) {
-                maxDataLength[i] = row[i].length();
-                if ((maxDataLength[i] % 2) == 1) {
-                    maxDataLength[i] += width;
-                }else {
-                    maxDataLength[i] += width+1;
-                }
+                changeMaxLength(maxDataLength, i, row[i].length());
             }
         }
 
+        //write into first non null element in data array
         for (int i = 0; i < data.length; i++) {
             if(data[i] == null) {
                 data[i] = row;
@@ -101,17 +112,12 @@ public class Table {
         Arrays.fill(newLength, 0);
 
         for(int i = 0; i < data.length; i++ ){
-
             if(i != rowID && data[i] != null){
                 newData[i] = data[i];
+                // reseting the max column values
                 for( int j = 0; j < data[i].length; j++){
                     if( data[i][j].length() > newLength[j]){
-                        newLength[j] = data[i][j].length();
-                        if ((maxDataLength[i] % 2) == 1) {
-                            maxDataLength[i] += width;
-                        }else {
-                            maxDataLength[i] += width+1;
-                        }
+                        changeMaxLength(newLength, j, newLength[j]);
                     }
                 }
             }
@@ -123,7 +129,42 @@ public class Table {
     }
 
 
-    private String printHeaders() {
+    /**
+     * Updates maxDataLength with the
+     * header values
+     */
+    private void fillHeaders() {
+        for (int i = 0; i < headers.length; i++) {
+            if (headers[i].length() > maxDataLength[i]) {
+                changeMaxLength(maxDataLength, i, headers[i].length());
+            }
+        }
+    }
+
+
+    /**
+     * Changes maximum length of a cell in an entire
+     * column of the table
+     * @param array - array which holds maximum lengths
+     * @param index - index of column that needs to be changed
+     * @param newLength - new maximum value
+     */
+    private void changeMaxLength(int[] array, int index, int newLength){
+
+        array[index] = newLength;
+        // value must always be even to ensure centering of text
+        if((array[index] % 2) == 1 )
+            array[index] += spacing;
+        else
+            array[index] += spacing + 1;
+    }
+
+
+    /**
+     * Returns the string containing
+     * header row of the table
+     */
+    private String getHeaders() {
         int ratio = 0;
         String horizontal = "";
         String vertical = "";
@@ -139,12 +180,17 @@ public class Table {
     }
 
 
-    private String printData() {
+    /**
+     * Returns the string containing all data
+     * rows from the table
+     */
+    private String getData() {
         String ret = "";
         for (int i = 0; i < data.length; i++) {
             if(data[i] != null) {
                 for (int j = 0; j < data[i].length; j++) {
                     if(data[i][j] != null) {
+                        // if size is odd add a space to make it even
                         if((data[i][j].length() % 2) == 1) {
                             data[i][j] += " ";
                         }
@@ -155,30 +201,20 @@ public class Table {
                 ret += "|\n";
             }
         }
-        return ret;
+        return ret + getLastRow();
     }
 
 
-    private String printLastRow() {
-        int ratio = 0;
+    /**
+     * Returns the string containing
+     * the last horizontal line in the table
+     */
+    private String getLastRow() {
         String ret = "";
         for (int i = 0; i < headers.length; i++) {
-            ratio = maxDataLength[i] - headers[i].length();
             ret += "+" + repeatString("-", maxDataLength[i]);
         }
         return ret + "+\n";
-    }
-
-
-    private String printZaglavnje(int duzina,String zaglavlje) {
-        if((zaglavlje.length()%2)==1) {
-            zaglavlje+=" ";
-        }
-        int odnos = duzina-zaglavlje.length();
-        String header = "+"+repeatString("-", duzina)+"\n";
-        header+="|"+repeatString(" ", odnos/2)+zaglavlje+repeatString(" ", odnos/2)+"\n";
-        header+="+"+repeatString("-", duzina)+"\n";
-        return header;
     }
 
 
@@ -221,57 +257,56 @@ public class Table {
     }
 
 
-    /** */
-    private void fillHeaders() {
-        for (int i = 0; i < headers.length; i++) {
-            if (headers[i].length() > maxDataLength[i]) {
-                maxDataLength[i] = headers[i].length();
-                if ((maxDataLength[i] % 2) == 1) {
-                    maxDataLength[i] += width;
-                }else {
-                    maxDataLength[i] += width+1;
-                }
-            }
-        }
-    }
-
 
     /**
      * Sets the spacing of the cell related to the item inside
      * @param newWidth - number of characters
      */
     public void setWidth(int newWidth) {
-        if (width > 2 && (width % 2) == 1) {
-            this.width = newWidth;
+        if (spacing > 2 && (spacing % 2) == 1) {
+            this.spacing = newWidth;
         }
-        else if(width > 2) {
-            this.width = newWidth+1;
+        else if(spacing > 2) {
+            this.spacing = newWidth+1;
         }
     }
 
 
     @Override
     public String toString() {
-        String pov = printHeaders();
-        pov += printData();
-        pov += printLastRow();
-        return pov;
+        String ret;
+        if(isHeaders)
+            ret = getHeaders();
+        else
+            ret = getLastRow();
+        ret += getData();
+        return ret;
     }
 
 
+    /**
+     * Displays the table without headers to the console output
+     */
     public void showWithoutHeaders() {
-        String pov = printLastRow();
-        pov += printData();
-        pov +=printLastRow();
-        System.out.println(pov);
+        String ret = getLastRow();
+        ret += getData();
+        System.out.println(ret);
     }
 
 
+    /**
+     * Displays the table to the console output
+     */
     public void show() {
-        String pov = printHeaders();
-        pov += printData();
-        pov += printLastRow();
-        System.out.println(pov);
+
+        //if the table has headers
+        if(isHeaders){
+            String ret = getHeaders();
+            ret += getData();
+            System.out.println(ret);
+        }
+        else
+            showWithoutHeaders();
     }
 
 }
